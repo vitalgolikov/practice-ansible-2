@@ -1,0 +1,110 @@
+---
+# Play 1 Add repo epel to group all
+- name: Adding repo epel
+  hosts: all
+  become: yes
+
+  tasks:
+#    - name: Add repository epel
+#      ansible.builtin.yum_repository:
+#        name: epel
+#        description: EPEL YUM repo
+#        baseurl: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+#        state: absent
+
+    - name: Install the latest version EPEL repo
+      ansible.builtin.yum:
+        name: epel-release
+        state: latest
+
+
+
+# Plat 2 Install Appache on all servers in group app
+- name: Install Appache
+  hosts: app
+  become: yes
+
+  tasks:
+    - name: Install the latest version of Apache
+      ansible.builtin.yum:
+        name: httpd
+        state: latest
+
+    - name: Start Appache and Enable Status Auto
+      service: name=httpd state=started enabled=yes
+
+# Play 3 Install MySql Database on servers in group db, and create empty database
+- name: Install mysql server and initialize service
+  hosts: db
+  become: yes
+  gather_facts: false
+  vars:
+     db_name: 'contetnx_db'
+
+
+  tasks:
+    - name: Install the latest version of MySql Server
+      ansible.builtin.dnf:
+        name: mysql-server
+        state: latest
+
+    - name: Make sure a MySql service Started and running
+      ansible.builtin.systemd:
+        name: mysqld.service
+        state: started
+        enabled: yes
+
+    - name: Install the latest version of python3-pip for custom module
+      ansible.builtin.yum:
+        name: python3-pip
+        state: latest
+
+
+
+    - name: Install pymysql for working with DataBase
+      ansible.builtin.pip:
+        name: pymysql
+
+
+    - name: Create a new database
+      community.mysql.mysql_db:
+        name: "{{ db_name }}"
+        state: present
+
+
+# Play 4 Create User, add user to group , sudo
+- name: Create User and Group for our homework
+  hosts: all
+  become: yes
+  vars:
+    username: 'student'
+    group: 'hillel'
+    passwd: 'student_pass'
+
+  tasks:
+
+    - name: Create group {{group}}
+      ansible.builtin.group:
+        name: "{{group}}"
+        state: present
+
+    - name: Create user "{{ username }}" and add them to group "{{group}}"
+      ansible.builtin.user:
+        name: "{{ username }}"
+        shell: /bin/bash
+        groups: "{{group}}, wheel"
+        append: yes
+
+
+
+    - name: change password hash
+      user:
+         user: "{{ username }}"
+         password: "{{ passwd }}"
+         generate_ssh_key: yes
+         ssh_key_bits: 2048
+         ssh_key_file: .ssh/id_rsa
+
+
+
+

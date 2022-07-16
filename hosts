@@ -1,0 +1,9 @@
+[app] 
+cnt01 ansible_host=10.0.2.10 
+
+[db]
+cnt02 ansible_host=10.0.2.11
+
+[env:children]
+app
+db
