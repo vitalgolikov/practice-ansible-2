@@ -1,0 +1,45 @@
+---
+# tasks list for deploy_LAMP
+
+# Installing latest version of Apache
+- name: Install the latest version of Apache
+  ansible.builtin.apt:
+    name: apache2
+    state: latest
+
+# Ensure that service auto enabled and started
+- name: Start Apache and Enable Status Auto
+  service: name=apache2 state=started enabled=yes
+
+# Install PHP Components
+- name: Installing PHP packages
+  apt: pkg={{ item }}
+  with_items:
+    - python3-pip
+    - php
+    - libapache2-mod-php
+    - php-mysql
+
+# Create Directory for content
+- name: Create a directory for virtual domain site content
+  ansible.builtin.file:
+    path: /var/www/{{virual_domain}}
+    state: directory
+    mode: '0755'
+
+# Setup Virtual Host on Apache
+- name: Copy config file to /etc/apache2/sites-available/
+  ansible.builtin.template:
+    src: apache.conf.j2
+    dest: "/etc/apache2/sites-available/{{virual_domain}}.conf"
+
+# Apache activate virtual host (!!!! After Activation Restart Apache)
+- name: a2ensite {{ virual_domain }}
+  command: a2ensite {{ virual_domain }}
+  notify:
+    - restart apache2
+
+# Apache firewall activation
+#- community.general.ufw:
+#    rule: allow
+#    name: OpenSSH

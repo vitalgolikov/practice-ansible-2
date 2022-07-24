@@ -1,0 +1,32 @@
+---
+# tasks file for deploy_mysql
+
+- name: Install the latest version of MySql Server
+  ansible.builtin.apt:
+    name: mysql-server
+    state: latest
+
+- name: Make sure a MySql service Started and running
+  ansible.builtin.systemd:
+    name: mysql.service
+    state: started
+    enabled: yes
+
+- name: Installing  python3-pip
+  apt: pkg={{ item }}
+  with_items:
+    - python3-pip
+
+- name: Install pymysql for working with DataBase
+  ansible.builtin.pip:
+    name: pymysql
+
+# Place my.cnf.j2  connection file to /etc/mysql   (!!! After Activation restart)
+- name: Copy my.cnf.j2 file to config
+  ansible.builtin.template:
+    src: my.cnf.j2
+    dest: "/etc/mysql/my.cnf"
+
+# Restart MySql Service after configuring
+- name: restart mysql
+  service: name=mysql state=restarted
