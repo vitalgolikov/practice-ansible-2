@@ -1,9 +1,9 @@
-[app] 
-cnt01 ansible_host=10.0.2.10 
+[web]
+web-server ansible_host=127.0.0.1 ansible_port=2222
 
 [db]
-cnt02 ansible_host=10.0.2.11
+db-server ansible_host=127.0.0.1 ansible_port=2200
 
 [env:children]
-app
+web
 db

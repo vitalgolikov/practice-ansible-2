@@ -21,7 +21,7 @@
 
 # Plat 2 Install Appache on all servers in group app
 - name: Install Appache
-  hosts: app
+  hosts: web
   become: yes
 
   tasks:

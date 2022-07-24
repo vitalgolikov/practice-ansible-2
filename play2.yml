@@ -1,0 +1,42 @@
+# Play 3 Install MySql Database on servers in group db, and create empty database
+
+- name: Install mysql server and initialize service
+  hosts: db
+  become: yes
+  gather_facts: false
+  vars:
+     app_db_name: 'lms_db'
+     app_db_username: 'lms_user'
+     app_db_password: 'rwegth53hbbn'
+
+
+  tasks:
+    - name: Create a new database with name "{{ db_name }}"
+      mysql_db:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: "{{ app_db_name }}"
+        state: present
+
+    - name: Copy SQL file to target host
+      ansible.builtin.copy:
+        src: /Users/vital/PycharmProjects/ansible_lab2/script.sql
+        dest: /tmp/script.sql
+
+
+    - name: Create tables "{{ db_name }}"
+      mysql_db:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: "{{ app_db_name }}"
+        state: import
+        target: /tmp/script.sql
+
+
+
+    - name: Create a new database user and password
+      mysql_user:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: "{{app_db_username}}"
+        password: "{{app_db_password}}"
+        priv: '{{app_db_name}}.*:ALL'
+        host: "%"
+        state: present
