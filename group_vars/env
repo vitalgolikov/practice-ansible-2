@@ -7,7 +7,7 @@ http_port: "80"
 ip_db_server: "192.168.98.211"
 app_db_name: 'lms_db'
 app_db_username: 'lms_user'
-app_db_password: 'rwegth53hbbn'
+# app_db_password: 'rwegth53hbbn'
 
 
 

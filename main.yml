@@ -3,6 +3,8 @@
 #- name: prepare apache
 - hosts: web
   become: yes
+  vars_files:
+    - "{{ inventory_dir }}/credentionals.yml"
 
   roles:
    - { role: deploy_LAMP, when ansible_os_family == Ubuntu }
@@ -36,6 +38,8 @@
 #================ Create Database=============================
 - hosts: db
   become: yes
+  vars_files:
+    - "{{ inventory_dir }}/credentionals.yml"
 
   roles:
     - { role: deploy_mysql, when ansible_os_family == Ubuntu }
@@ -55,7 +59,6 @@
 #        var: dbstatus_exist
 
 
-
     - name: Create a new database with name "{{ app_db_name }}"
       mysql_db:
         login_unix_socket: /var/run/mysqld/mysqld.sock
@@ -64,17 +67,6 @@
         target: /tmp/script.sql
         force: no
       when: app_db_name not in dbstatus_exist.stdout_lines
-
-
-
-#    - name: Create tables "{{ db_name }}"
-#      mysql_db:
-#        login_unix_socket: /var/run/mysqld/mysqld.sock
-#        name: "{{ app_db_name }}"
-#        state: import
-#        target: /tmp/script.sql
-#      when: result is succeeded
-
 
 
     - name: Create a new database user and password
