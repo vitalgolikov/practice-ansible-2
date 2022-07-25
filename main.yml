@@ -7,7 +7,7 @@
 
   roles:
 
-   - { role: deploy_LAMP, become: yes, when ansible_os_family == Ubuntu }
+   - { role: deploy_LAMP, become: yes, http_port: 80,  when ansible_os_family == Ubuntu }
 
 #==========================================================================
   tasks:
