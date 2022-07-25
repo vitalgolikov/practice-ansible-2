@@ -32,14 +32,9 @@
   ansible.builtin.template:
     src: apache.conf.j2
     dest: "/etc/apache2/sites-available/{{virual_domain}}.conf"
-
-# Apache activate virtual host (!!!! After Activation Restart Apache)
-- name: a2ensite {{ virual_domain }}
-  command: a2ensite {{ virual_domain }}
   notify:
+    - a2ensite {{ virual_domain }}
     - restart apache2
 
-# Apache firewall activation
-#- community.general.ufw:
-#    rule: allow
-#    name: OpenSSH
+
+

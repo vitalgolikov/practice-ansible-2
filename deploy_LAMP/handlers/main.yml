@@ -10,3 +10,7 @@
   service:
     name: apache2
     state: restarted
+
+# Apache activate virtual host
+- name: a2ensite {{ virual_domain }}
+  command: a2ensite {{ virual_domain }}

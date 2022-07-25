@@ -5,7 +5,7 @@
   become: yes
 
   roles:
-    - deploy_LAMP
+   - { role: deploy_LAMP, when ansible_os_family == Ubuntu }
 
 #==========================================================================
   tasks:
@@ -14,6 +14,7 @@
       ansible.builtin.git:
         repo: https://github.com/FaztWeb/php-mysql-crud.git
         dest: "/tmp/{{virual_domain}}"
+      register: uploaded
 
 # Replays folder with items to apache work directory (!!!After previous task finished)
     - name: Copy Uploaded app from temp to multiple site location
@@ -21,6 +22,7 @@
         src: "/tmp/{{virual_domain}}"
         dest: /var/www/
         remote_src: yes
+      when: uploaded.changed
 
 
 # Place DB connection file to application folder   (!!! After Activate site)
@@ -36,27 +38,42 @@
   become: yes
 
   roles:
-    - deploy_mysql
+    - { role: deploy_mysql, when ansible_os_family == Ubuntu }
 
   tasks:
-    - name: Create a new database with name "{{ db_name }}"
-      mysql_db:
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-        name: "{{ app_db_name }}"
-        state: present
-
     - name: Copy SQL file to target host
       ansible.builtin.copy:
         src: /Users/vital/PycharmProjects/ansible_lab2/script.sql
         dest: /tmp/script.sql
 
 
-    - name: Create tables "{{ db_name }}"
+    - name: check if DB exists
+      shell: mysql -e 'SHOW DATABASES;'
+      register: dbstatus_exist
+
+#    - debug:
+#        var: dbstatus_exist
+
+
+
+    - name: Create a new database with name "{{ app_db_name }}"
       mysql_db:
         login_unix_socket: /var/run/mysqld/mysqld.sock
         name: "{{ app_db_name }}"
         state: import
         target: /tmp/script.sql
+        force: no
+      when: app_db_name not in dbstatus_exist.stdout_lines
+
+
+
+#    - name: Create tables "{{ db_name }}"
+#      mysql_db:
+#        login_unix_socket: /var/run/mysqld/mysqld.sock
+#        name: "{{ app_db_name }}"
+#        state: import
+#        target: /tmp/script.sql
+#      when: result is succeeded
 
 
 
