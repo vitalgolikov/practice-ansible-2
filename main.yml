@@ -1,6 +1,5 @@
 ---
-# Part 1 Provisioning application
-#- name: prepare apache
+# Part 1 Provisioning apache
 - hosts: web
   vars_files:
     - "{{ inventory_dir }}/credentionals.yml"
@@ -13,7 +12,6 @@
   tasks:
 #   Download repo from github (we need to waiting for ending this task)
     - name: Upload App to the temp Directory
-#      become: yes
       ansible.builtin.git:
         repo: https://github.com/FaztWeb/php-mysql-crud.git
         dest: "/tmp/{{virual_domain}}"
@@ -47,24 +45,22 @@
     - { role: deploy_mysql, become: yes, when ansible_os_family == Ubuntu }
 
   tasks:
+# Copy sql file to destination for creating our database
     - name: Copy SQL file to target host
       ansible.builtin.copy:
         src: /Users/vital/PycharmProjects/ansible_lab2/script.sql
         dest: /tmp/script.sql
 
-
+# Checking existing database
     - name: check if DB exists
       become: yes
       shell: mysql -e 'SHOW DATABASES;'
       register: dbstatus_exist
 
-#    - debug:
-#        var: dbstatus_exist
-
-
+# Creating database for our application
     - name: Create a new database with name "{{ app_db_name }}"
       become: yes
-      mysql_db:
+      community.mysql.mysql_db:
         login_unix_socket: /var/run/mysqld/mysqld.sock
         name: "{{ app_db_name }}"
         state: import
@@ -72,15 +68,13 @@
         force: no
       when: app_db_name not in dbstatus_exist.stdout_lines
 
-
+# Creating user database for our application
     - name: Create a new database user and password
       become: yes
-      mysql_user:
+      community.mysql.mysql_user:
         login_unix_socket: /var/run/mysqld/mysqld.sock
         name: "{{app_db_username}}"
         password: "{{app_db_password}}"
         priv: '{{app_db_name}}.*:ALL'
         host: "%"
         state: present
-
-
