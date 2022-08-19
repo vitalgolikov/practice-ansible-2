@@ -30,3 +30,38 @@
 # Restart MySql Service after configuring
 - name: restart mysql
   service: name=mysql state=restarted
+
+#===================================================================================
+# Copy sql file to destination for creating our database
+- name: Copy SQL file to target host
+  ansible.builtin.copy:
+    src: script.sql
+    dest: /tmp/script.sql
+
+# Checking existing database
+- name: check if DB exists
+  become: yes
+  shell: mysql -e 'SHOW DATABASES;'
+  register: dbstatus_exist
+
+# Creating database for our application
+- name: Create a new database with name "{{ app_db_name }}"
+  become: yes
+  community.mysql.mysql_db:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: "{{ app_db_name }}"
+    state: import
+    target: /tmp/script.sql
+    force: no
+  when: app_db_name not in dbstatus_exist.stdout_lines
+
+# Creating user database for our application
+- name: Create a new database user and password
+  become: yes
+  community.mysql.mysql_user:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: "{{app_db_username}}"
+    password: "{{app_db_password}}"
+    priv: '{{app_db_name}}.*:ALL'
+    host: "%"
+    state: present

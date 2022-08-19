@@ -1,0 +1,24 @@
+#   Download repo from github (we need to waiting for ending this task)
+- name: Upload App to the temp Directory
+  ansible.builtin.git:
+    repo: https://github.com/FaztWeb/php-mysql-crud.git
+    dest: "/tmp/{{virual_domain}}"
+  register: uploaded
+
+# Replays folder with items to apache work directory (!!!After previous task finished)
+- name: Copy Uploaded app from temp to multiple site location
+  become: yes
+  ansible.builtin.copy:
+    src: "/tmp/{{virual_domain}}"
+    dest: /var/www/
+    remote_src: yes
+  when: uploaded.changed
+
+
+# Place DB connection file to application folder   (!!! After Activate site)
+- name: Copy db.php.j2 file to /var/www/"{{virual_domain}}"
+  become: yes
+  template:
+    src: db.php.j2
+    dest: "/var/www/{{virual_domain}}/db.php"
+

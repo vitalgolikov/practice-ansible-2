@@ -7,74 +7,12 @@
   roles:
 
    - { role: deploy_LAMP, become: yes, http_port: 80,  when ansible_os_family == Ubuntu }
-
-#==========================================================================
-  tasks:
-#   Download repo from github (we need to waiting for ending this task)
-    - name: Upload App to the temp Directory
-      ansible.builtin.git:
-        repo: https://github.com/FaztWeb/php-mysql-crud.git
-        dest: "/tmp/{{virual_domain}}"
-      register: uploaded
-
-# Replays folder with items to apache work directory (!!!After previous task finished)
-    - name: Copy Uploaded app from temp to multiple site location
-      become: yes
-      ansible.builtin.copy:
-        src: "/tmp/{{virual_domain}}"
-        dest: /var/www/
-        remote_src: yes
-      when: uploaded.changed
+   - { role: deploy_crub, become: no, when ansible_os_family == Ubuntu }
 
 
-# Place DB connection file to application folder   (!!! After Activate site)
-    - name: Copy db.php.j2 file to /var/www/"{{virual_domain}}"
-      become: yes
-      template:
-        src: /Users/vital/PycharmProjects/ansible_lab2/db.php.j2
-        dest: "/var/www/{{virual_domain}}/db.php"
-
-
-
-#================ Create Database=============================
+#================ Deploy MySQL and create Database =============================
 - hosts: db
   vars_files:
     - "{{ inventory_dir }}/credentionals.yml"
-
   roles:
     - { role: deploy_mysql, become: yes, when ansible_os_family == Ubuntu }
-
-  tasks:
-# Copy sql file to destination for creating our database
-    - name: Copy SQL file to target host
-      ansible.builtin.copy:
-        src: /Users/vital/PycharmProjects/ansible_lab2/script.sql
-        dest: /tmp/script.sql
-
-# Checking existing database
-    - name: check if DB exists
-      become: yes
-      shell: mysql -e 'SHOW DATABASES;'
-      register: dbstatus_exist
-
-# Creating database for our application
-    - name: Create a new database with name "{{ app_db_name }}"
-      become: yes
-      community.mysql.mysql_db:
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-        name: "{{ app_db_name }}"
-        state: import
-        target: /tmp/script.sql
-        force: no
-      when: app_db_name not in dbstatus_exist.stdout_lines
-
-# Creating user database for our application
-    - name: Create a new database user and password
-      become: yes
-      community.mysql.mysql_user:
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-        name: "{{app_db_username}}"
-        password: "{{app_db_password}}"
-        priv: '{{app_db_name}}.*:ALL'
-        host: "%"
-        state: present
